@@ -1,6 +1,6 @@
 import requests
 from bs4 import BeautifulSoup as soup
-import time
+import json
 
 
 def get_input():
@@ -113,41 +113,49 @@ def get_points(tbody):
     return list_of_points
 
 
-def save(path, race, names, teams, points):
-    lines = []
-    """header = ("{0}\npos,name,team,points".format(
-        race.strip("0123456789/-")))
-    lines.append(header)"""
-    for i in range(len(names)):
-        n = str(names[i])
-        te = str(teams[i])
-        #l = str(laps[i])
-        #t = str(time[i])
-        p = str(points[i])
-        appendLine = ("{0},{1},{2},{3}".format(i+1, n, te, p))
-        lines.append(appendLine)
-    with open(path, "a", encoding="utf-8") as f:
-        for line in lines:
-            f.write(line + "\n")
-    f.close()
+drivers_dict = {}
+
+
+def update_dict(drivers):
+    for i in range(len(drivers)):
+        if drivers[i] not in drivers_dict:
+            drivers_dict[drivers[i]] = []
+            drivers_dict[drivers[i]].append(i+1)
+        else:
+            drivers_dict[drivers[i]].append(i+1)
+
+
+def print_dictionary(my_dict):
+    for key, value in my_dict.items():
+        print(f'{key}: {value}')
+
+
+def save(filename):
+    # Open the file in write mode and save the contents of the global dictionary to it
+    with open(filename, 'w') as json_file:
+        json.dump(drivers_dict, json_file)
 
 
 def main():
-    open("raceInfo.csv", "w").flush()
+    open("raceInfo.json", "w").flush()
     year = get_input()
     url = "https://www.formula1.com/en/results.html/"+str(year)+"/races.html"
     doc = get_page(url)
     race_links = get_races(doc)
-    for index in range(1, len(race_links)-1):
+    for index in range(1, len(race_links)):
+
         race_name = race_links[index][0]
         tbody = get_tbody(race_name, year)
         name = get_driver_name(tbody)
-        team = get_team_name(tbody)
+        #team = get_team_name(tbody)
         #completed_laps = get_laps(tbody)
         #times = get_times(tbody)
-        points = get_points(tbody)
-        save("raceInfo.csv", race_name, name, team, points)
+        #points = get_points(tbody)
+        #quali = get_quali_res(tbody)
+        update_dict(name)
+        save("raceInfo.json",)
     print("done")
+    print_dictionary(drivers_dict)
 
 
 main()
